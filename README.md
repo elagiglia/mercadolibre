@@ -1,4 +1,4 @@
-# MercadoLibre's Golang SDK
+# MercadoLibre's Golang SDK [DRAFT - WORK IN PROGRESS]
 
 This is the official GO SDK for MercadoLibre's Platform.
 
@@ -7,43 +7,22 @@ This is the official GO SDK for MercadoLibre's Platform.
 You can download the latest build at:
     https://github.com/mercadolibre/go-sdk/archive/master.zip
 
-How do I install it using maven:
+How do I install it using go:
 
 Just add to your pom the following repository
 
 ```xml
-<repositories>
-        ...
-        <repository>
-                <id>mercadolibre-snapshots</id>
-                <url>https://github.com/mercadolibre/java-sdk-repo/raw/master/snapshots</url>
-        </repository>
-        ...
-</repositories>
-```
-
-And then add your dependency
-
-```xml
-<dependencies>
-        ...
-        <dependency>
-                <groupId>com.mercadolibre</groupId>
-                <artifactId>sdk</artifactId>
-                <version>0.0.2-SNAPSHOT</version>
-        </dependency>
-        ...
-</dependencies>
+go get github.com/mercadolibre/sdk
 ```
 
 And that's it!
 
 ## How do I start using it?
 
-The first thing to do is to instance a ```Meli``` class. You'll need to give a ```clientId``` and a ```clientSecret```. You can obtain both after creating your own application. For more information on this please read: [creating an application](http://developers.mercadolibre.com/application-manager/)
+The first thing to do is to instance a ```Client``` object. You'll need to give a ```clientId``` and a ```clientSecret```. You can obtain both after creating your own application. For more information on this please read: [creating an application](http://developers.mercadolibre.com/application-manager/)
 
-```java
-Meli m = new Meli(1234, "a secret");
+```go
+Client{clientId:123456, clientSecret:"client secret", apiUrl:"https://localhost:3000"}
 ```
 With this instance you can start working on MercadoLibre's APIs.
 
@@ -57,7 +36,7 @@ This is a 2 step process.
 
 First get the link to redirect the user. This is very easy! Just:
 
-```java
+```go
 String redirectUrl = m.getAuthUrl("http://somecallbackurl");
 ```
 
@@ -65,7 +44,7 @@ This will give you the url to redirect the user. You need to specify a callback 
 
 Once the user is redirected to your callback url, you'll receive in the query string, a parameter named ```code```. You'll need this for the second part of the process.
 
-```java
+```go
 m.authorize("the received code", "http://somecallbackurl");
 ```
 
@@ -76,12 +55,16 @@ At this stage your are ready to make call to the API on behalf of the user.
 ## Making GET calls
 
 ```GO
+client := sdk.NewClient()
+client.Get("/items")
 
 ```
 
 ## Making POST calls
 
 ```GO
+client := sdk.NewClient()
+client.Post("/items")
 
 ```
 ## Making PUT calls
@@ -92,7 +75,8 @@ At this stage your are ready to make call to the API on behalf of the user.
 ## Making DELETE calls
 
 ```GO
-
+client := sdk.NewClient()
+client.Delete("/items/123")
 ```
 
 ## Do I always need to include the ```access_token``` as a parameter?
