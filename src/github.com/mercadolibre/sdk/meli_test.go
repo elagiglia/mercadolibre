@@ -8,12 +8,18 @@ import (
 	"io/ioutil"
 )
 
+const (
+	API_TEST = "http://localhost:3000"
+	CLIENT_ID = 123456
+	CLIENT_SECRET = "client secret"
+)
+
 func Test_URL_for_authentication_is_properly_return(t *testing.T) {
 
 	expectedUrl := "https://auth.mercadolibre.com.ar/authorization?response_type=code&client_id=123456&redirect_uri=http%3A%2F%2Fsomeurl.com"
 
-	client := Client{clientId:123456, clientSecret:"client secret"}
-	url := client.getAuthURL(MLA, "http://someurl.com")
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	url := client.GetAuthURL(MLA, "http://someurl.com")
 
 	if url != expectedUrl {
 		log.Printf("Error: The URL is different from the one that was expected.")
@@ -26,7 +32,9 @@ func Test_URL_for_authentication_is_properly_return(t *testing.T) {
 
 func Test_That_Authorization_Process_Works(t *testing.T) {
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
+
 	resp, err := client.Authorize("valid code with refresh token", "http://someurl.com")
 
 	fmt.Printf("Access_token: %s \nRefresh_token: %s", resp.Access_token, resp.Refresh_token)
@@ -48,7 +56,8 @@ func Test_That_Authorization_Process_Works(t *testing.T) {
 
 func Test_GET_public_API_sites_works_properly ( t *testing.T){
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
 
 	//Public APIs do not need Authorization
 	resp, err := client.Get("/sites", new (Authorization))
@@ -71,7 +80,9 @@ func Test_GET_public_API_sites_works_properly ( t *testing.T){
 
 func Test_GET_private_API_users_works_properly (t *testing.T){
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
+
 	authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
 	resp, err := client.Get("/users/me", &authorization)
@@ -89,7 +100,9 @@ func Test_GET_private_API_users_works_properly (t *testing.T){
 
 func Test_GET_private_API_users_returns_an_error_when_refresh_token_is_not_valid (t *testing.T){
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
+	//client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
 	authorization := Authorization{Access_token:"expired token", Refresh_token:"no valid"}
 
 	resp, err := client.Get("/users/me", &authorization)
@@ -107,7 +120,8 @@ func Test_GET_private_API_users_returns_an_error_when_refresh_token_is_not_valid
 
 func Test_POST_a_new_item_works_properly_when_token_IS_EXPIRED(t *testing.T){
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
 	authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
 	body := "{\"foo\":\"bar\"}"
@@ -126,7 +140,8 @@ func Test_POST_a_new_item_works_properly_when_token_IS_EXPIRED(t *testing.T){
 
 func Test_POST_a_new_item_works_properly_when_token_IS_NOT_EXPIRED (t *testing.T){
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
 	authorization := Authorization{Access_token:"valid token", Refresh_token:"valid refresh token"}
 
 	body := "{\"foo\":\"bar\"}"
@@ -145,7 +160,8 @@ func Test_POST_a_new_item_works_properly_when_token_IS_NOT_EXPIRED (t *testing.T
 
 func Test_PUT_a_new_item_works_properly_when_token_IS_NOT_EXPIRED (t *testing.T){
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
 	authorization := Authorization{Access_token:"valid token", Refresh_token:"valid refresh token"}
 
 	body := "{\"foo\":\"bar\"}"
@@ -164,7 +180,8 @@ func Test_PUT_a_new_item_works_properly_when_token_IS_NOT_EXPIRED (t *testing.T)
 
 func Test_PUT_a_new_item_works_properly_when_token_IS_EXPIRED (t *testing.T){
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
 	authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
 	body := "{\"foo\":\"bar\"}"
@@ -183,7 +200,8 @@ func Test_PUT_a_new_item_works_properly_when_token_IS_EXPIRED (t *testing.T){
 
 func Test_DELETE_an_item_returns_200_when_token_IS_NOT_EXPIRED (t *testing.T){
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
 	authorization := Authorization{Access_token:"valid token", Refresh_token:"valid refresh token"}
 
 	//body := "{\"foo\":\"bar\"}"
@@ -202,7 +220,8 @@ func Test_DELETE_an_item_returns_200_when_token_IS_NOT_EXPIRED (t *testing.T){
 
 func Test_DELETE_an_item_returns_200_when_token_IS_EXPIRED (t *testing.T){
 
-	client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+	client := NewClient(CLIENT_ID, CLIENT_SECRET)
+	client.SetApiURL(API_TEST)
 	authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
 	//body := "{\"foo\":\"bar\"}"

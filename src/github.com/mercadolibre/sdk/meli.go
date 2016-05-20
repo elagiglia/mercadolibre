@@ -43,13 +43,21 @@ type Client struct {
 	clientSecret string
 }
 
-func NewClient() *Client {
+func NewClient(clientId int64, clientSecret string) *Client {
+
 	client := new(Client)
 	client.apiUrl = "https://api.mercadolibre.com"
+	client.clientId = clientId
+	client.clientSecret = clientSecret
+
 	return client
 }
 
-func (client Client) getAuthURL(base_site, callback string ) string {
+func (client *Client) SetApiURL(url string) {
+	client.apiUrl = url
+}
+
+func (client Client) GetAuthURL(base_site, callback string ) string {
 
 	var buffer bytes.Buffer
 	buffer.WriteString("/authorization?response_type=code&client_id=")

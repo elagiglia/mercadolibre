@@ -19,7 +19,7 @@ And that's it!
 
 ## How do I start using it?
 
-The first thing to do is to instance a ```Client``` object. You'll need to give a ```clientId``` and a ```clientSecret```. You can obtain both after creating your own application. For more information on this please read: [creating an application](http://developers.mercadolibre.com/application-manager/)
+The first thing to do is to instance a ```Client``` object. You'll need to give a ```clientId``` and a ```clientSecret```. You can obtain both after creating your own application. For more information on this please read: [creating an application](http://developers.mercadolibre.com/application-manager/)
 
 ```go
 Client{clientId:123456, clientSecret:"client secret", apiUrl:"https://localhost:3000"}
@@ -37,7 +37,7 @@ This is a 2 step process.
 First get the link to redirect the user. This is very easy! Just:
 
 ```go
-String redirectUrl = m.getAuthUrl("http://somecallbackurl");
+
 ```
 
 This will give you the url to redirect the user. You need to specify a callback url which will be the one that the user will redirected after a successfull authrization process.
@@ -45,7 +45,7 @@ This will give you the url to redirect the user. You need to specify a callback 
 Once the user is redirected to your callback url, you'll receive in the query string, a parameter named ```code```. You'll need this for the second part of the process.
 
 ```go
-m.authorize("the received code", "http://somecallbackurl");
+
 ```
 
 This will get an ```accessToken``` and a ```refreshToken``` (is case your application has the ```offline_access```) for your application and your user.
