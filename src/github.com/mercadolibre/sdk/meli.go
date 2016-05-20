@@ -75,17 +75,15 @@ func (client Client) GetAuthURL(base_site, callback string ) string {
 
 func (client Client) Authorize(code, redirectUri string) (Authorization, error) {
 
-	base_url := client.apiUrl + "/oauth/token?"
+	var params bytes.Buffer
+	params.WriteString("grant_type=authorization_code")
+	params.WriteString("&client_id=")
+	params.WriteString(strconv.FormatInt(client.clientId, 10))
+	params.WriteString("&client_secret=" + url.QueryEscape(client.clientSecret))
+	params.WriteString("&code=" + url.QueryEscape(code))
+	params.WriteString("&redirect_uri=" + url.QueryEscape(redirectUri))
 
-	params := "grant_type=authorization_code"
-	params += "&client_id="
-	params += strconv.FormatInt(client.clientId, 10)
-	params += "&client_secret=" + url.QueryEscape(client.clientSecret)
-	params += "&code=" + url.QueryEscape(code)
-	params += "&redirect_uri=" + url.QueryEscape(redirectUri)
-
-
-	final_url := base_url + params
+	final_url := client.apiUrl + "/oauth/token?" + params.String()
 
 	authorization := new(Authorization)
 	resp, err := http.Post(final_url, "application/json", *(new(io.Reader)))
@@ -140,15 +138,17 @@ func (client Client) RefreshToken(authorization *Authorization) error {
 
 	log.Printf("Refreshing token\n")
 
-	base_url := client.apiUrl + "/oauth/token?"
+	var base_url bytes.Buffer
+	base_url.WriteString(client.apiUrl)
+	base_url.WriteString("/oauth/token?")
 
-	params := "grant_type=refresh_token"
-	params += "&client_id="
-	params += strconv.FormatInt(client.clientId, 10)
-	params += "&client_secret=" + url.QueryEscape(client.clientSecret)
-	params += "&refresh_token=" + url.QueryEscape(authorization.Refresh_token)
+	base_url.WriteString("grant_type=refresh_token")
+	base_url.WriteString("&client_id=")
+	base_url.WriteString(strconv.FormatInt(client.clientId, 10))
+	base_url.WriteString("&client_secret=" + url.QueryEscape(client.clientSecret))
+	base_url.WriteString("&refresh_token=" + url.QueryEscape(authorization.Refresh_token))
 
-	resp, err := http.Post(base_url + params, "application/json", *(new(io.Reader)))
+	resp, err := http.Post(base_url.String(), "application/json", *(new(io.Reader)))
 
 	if err != nil || resp.StatusCode != http.StatusOK {
 
@@ -186,7 +186,7 @@ func (client Client) Post(resource_path string, authorization *Authorization, bo
 	if resp.StatusCode == http.StatusNotFound {
 
 		client.RefreshToken(authorization)
-		resp, err = http.Post(base_url + "?access_token=" + url.QueryEscape(authorization.Access_token),"application/json", bytes.NewReader([]byte(body)))
+		resp, err = http.Post(base_url + "?access_token=" + url.QueryEscape(authorization.Access_token), "application/json", bytes.NewReader([]byte(body)))
 
 		if err != nil {
 			log.Printf("Error while calling API %s\n", err)
@@ -274,6 +274,22 @@ func (client Client) Delete(resource_path string, authorization *Authorization) 
 
 	return resp, nil
 }
+/*
+func refreshIfNeeded(resp http.Response, ) {
+
+	if resp.StatusCode == http.StatusNotFound {
+
+		client.RefreshToken(authorization)
+
+		resp, err = http.Get(base_url + "?access_token=" + url.QueryEscape(authorization.Access_token))
+
+		if err != nil {
+			log.Printf("Error while calling API %s\n", err)
+			return resp, err
+		}
+	}
+}*/
+
 
 type Authorization struct {
 	Access_token string
