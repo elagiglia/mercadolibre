@@ -43,9 +43,10 @@ type Client struct {
 	clientSecret string
 }
 
-func NewClient() Client {
+func NewClient() *Client {
 	client := new(Client)
 	client.apiUrl = "https://api.mercadolibre.com"
+	return client
 }
 
 func (client Client) getAuthURL(base_site, callback string ) string {
