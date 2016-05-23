@@ -102,7 +102,7 @@ func Test_GET_private_API_users_returns_an_error_when_refresh_token_is_not_valid
 
     client := NewClient(CLIENT_ID, CLIENT_SECRET)
     client.SetApiURL(API_TEST)
-    //client := Client{clientId:123456, clientSecret:"client secret", apiUrl:"http://localhost:3000"}
+
     authorization := Authorization{Access_token:"expired token", Refresh_token:"no valid"}
 
     resp, err := client.Get("/users/me", &authorization)
@@ -165,7 +165,7 @@ func Test_PUT_a_new_item_works_properly_when_token_IS_NOT_EXPIRED (t *testing.T)
     authorization := Authorization{Access_token:"valid token", Refresh_token:"valid refresh token"}
 
     body := "{\"foo\":\"bar\"}"
-    resp, err := client.Put("/items/123", &authorization, body)
+    resp, err := client.Put("/items/123", &authorization, &body)
 
     if err != nil {
         log.Printf("Error while posting a new item %s\n", err)
@@ -185,7 +185,7 @@ func Test_PUT_a_new_item_works_properly_when_token_IS_EXPIRED (t *testing.T){
     authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
     body := "{\"foo\":\"bar\"}"
-    resp, err := client.Put("/items/123", &authorization, body)
+    resp, err := client.Put("/items/123", &authorization, &body)
 
     if err != nil {
         log.Printf("Error while posting a new item %s\n", err)
@@ -204,7 +204,6 @@ func Test_DELETE_an_item_returns_200_when_token_IS_NOT_EXPIRED (t *testing.T){
     client.SetApiURL(API_TEST)
     authorization := Authorization{Access_token:"valid token", Refresh_token:"valid refresh token"}
 
-    //body := "{\"foo\":\"bar\"}"
     resp, err := client.Delete("/items/123", &authorization)
 
     if err != nil {
@@ -224,7 +223,6 @@ func Test_DELETE_an_item_returns_200_when_token_IS_EXPIRED (t *testing.T){
     client.SetApiURL(API_TEST)
     authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
-    //body := "{\"foo\":\"bar\"}"
     resp, err := client.Delete("/items/123", &authorization)
 
     if err != nil {

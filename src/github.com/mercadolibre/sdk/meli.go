@@ -152,7 +152,6 @@ func (client Client) RefreshToken(authorization *Authorization) error {
     var base_url bytes.Buffer
     base_url.WriteString(client.apiUrl)
     base_url.WriteString("/oauth/token?")
-
     base_url.WriteString("grant_type=refresh_token")
     base_url.WriteString("&client_id=")
     base_url.WriteString(strconv.FormatInt(client.clientId, 10))
@@ -207,7 +206,7 @@ func (client Client) Post(resource_path string, authorization *Authorization, bo
 
     return resp, nil
 }
-func (client Client) Put(resource_path string, authorization *Authorization, body string) (*http.Response, error){
+func (client Client) Put(resource_path string, authorization *Authorization, body *string) (*http.Response, error){
 
     base_url := client.apiUrl + resource_path
     final_url := base_url
@@ -217,7 +216,7 @@ func (client Client) Put(resource_path string, authorization *Authorization, bod
     }
 
 
-    req, err := http.NewRequest(http.MethodPut, final_url, strings.NewReader(body))
+    req, err := http.NewRequest(http.MethodPut, final_url, strings.NewReader(*body))
     if err != nil {
         log.Printf("Error when creating PUT request %d.", err)
         return nil, err
@@ -235,7 +234,7 @@ func (client Client) Put(resource_path string, authorization *Authorization, bod
     if resp.StatusCode == http.StatusNotFound {
 
         client.RefreshToken(authorization)
-        req, err = http.NewRequest(http.MethodPut, base_url + "?access_token=" + url.QueryEscape(authorization.Access_token), strings.NewReader(body))
+        req, err = http.NewRequest(http.MethodPut, base_url + "?access_token=" + url.QueryEscape(authorization.Access_token), strings.NewReader(*body))
         if err != nil {
             log.Printf("Error when creating PUT request %d.", err)
             return nil, err
