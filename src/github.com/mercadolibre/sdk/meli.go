@@ -51,7 +51,9 @@ type Client struct {
     clientId int64
     clientSecret string
 }
-
+/*
+clientId: ID that is generated when you create your application
+*/
 func NewClient(clientId int64, clientSecret string) *Client {
 
     client := new(Client)
@@ -82,7 +84,7 @@ func (client Client) GetAuthURL(base_site, callback string ) string {
     return full_url
 }
 
-func (client Client) Authorize(code, redirectUri string) (Authorization, error) {
+func (client Client) Authorize(code, redirectUri string) (*Authorization, error) {
 
     var params bytes.Buffer
     params.WriteString("grant_type=authorization_code")
@@ -99,17 +101,17 @@ func (client Client) Authorize(code, redirectUri string) (Authorization, error) 
 
     if err != nil {
         fmt.Printf("Error when posting: %s", err)
-        return *authorization, err
+        return nil, err
     }
 
     body, err := ioutil.ReadAll(resp.Body)
 
     if err := json.Unmarshal(body, authorization); err != nil {
         log.Printf("Error while receiving the authorization %s %s", err, body)
-        return *authorization, err
+        return nil, err
     }
 
-    return *authorization, nil
+    return authorization, nil
 }
 
 func (client Client) Get(resource_path string, authorization *Authorization) (*http.Response, error) {
@@ -124,7 +126,7 @@ func (client Client) Get(resource_path string, authorization *Authorization) (*h
     resp, err := http.Get(final_url)
     if err != nil {
         fmt.Printf("Error while calling url: %s \n Error: %s", final_url, err)
-        return resp, err
+        return nil, err
     }
 
     if resp.StatusCode == http.StatusNotFound {
@@ -135,7 +137,7 @@ func (client Client) Get(resource_path string, authorization *Authorization) (*h
 
         if err != nil {
             log.Printf("Error while calling API %s\n", err)
-            return resp, err
+            return nil, err
         }
     }
 
@@ -189,7 +191,7 @@ func (client Client) Post(resource_path string, authorization *Authorization, bo
 
     if err != nil {
         fmt.Printf("Error while calling url: %s \n Error: %s", final_url, err)
-        return resp, err
+        return nil, err
     }
 
     if resp.StatusCode == http.StatusNotFound {
@@ -199,7 +201,7 @@ func (client Client) Post(resource_path string, authorization *Authorization, bo
 
         if err != nil {
             log.Printf("Error while calling API %s\n", err)
-            return resp, err
+            return nil, err
         }
     }
 
@@ -227,7 +229,7 @@ func (client Client) Put(resource_path string, authorization *Authorization, bod
 
     if err != nil {
         fmt.Printf("Error while calling url: %s \n Error: %s", final_url, err)
-        return resp, err
+        return nil, err
     }
 
     if resp.StatusCode == http.StatusNotFound {
@@ -266,7 +268,7 @@ func (client Client) Delete(resource_path string, authorization *Authorization) 
 
     if err != nil {
         fmt.Printf("Error while calling url: %s \n Error: %s", final_url, err)
-        return resp, err
+        return nil, err
     }
 
     if resp.StatusCode == http.StatusNotFound {
@@ -283,23 +285,10 @@ func (client Client) Delete(resource_path string, authorization *Authorization) 
 
     return resp, nil
 }
+
 /*
-func refreshIfNeeded(resp http.Response, ) {
-
-    if resp.StatusCode == http.StatusNotFound {
-
-        client.RefreshToken(authorization)
-
-        resp, err = http.Get(base_url + "?access_token=" + url.QueryEscape(authorization.Access_token))
-
-        if err != nil {
-            log.Printf("Error while calling API %s\n", err)
-            return resp, err
-        }
-    }
-}*/
-
-
+If a refresh token is present in the authorization code exchange, then it may be used to obtain new access tokens at any time.
+*/
 type Authorization struct {
     Access_token string
     Token_type string
