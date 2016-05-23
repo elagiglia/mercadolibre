@@ -9,9 +9,9 @@ You can download the latest build at:
 
 How do I install it using go:
 
-Just add to your pom the following repository
+Just run the following command within your $GOPATH
 
-```xml
+```bash
 go get github.com/mercadolibre/sdk
 ```
 
@@ -20,17 +20,18 @@ And that's it!
 ## How do I start using it?
 
 The first thing to do is to instance a ```Client``` object. You'll need to give a ```clientId``` and a ```clientSecret```. You can obtain both after creating your own application. For more information on this please read: [creating an application](http://developers.mercadolibre.com/application-manager/)
-
+
 ```go
-Client{clientId:123456, clientSecret:"client secret", apiUrl:"https://localhost:3000"}
+client := sdk.NewClient(123456,"client secret")
+
 ```
 With this instance you can start working on MercadoLibre's APIs.
 
 There are some design considerations worth to mention.
 1. This SDK is just a thin layer on top of an http client to handle all the OAuth WebServer flow for you.
-2. There is no JSON parsing. This is left to you. But this SDK will include [gson](http://code.google.com/p/google-gson/) library for internal usage.
+2. There is no JSON parsing. This is left to you.
 
-## How do I redirect users to authorize my application?
+## How do I redirect users to authorize my application?
 
 This is a 2 step process.
 
@@ -55,7 +56,7 @@ At this stage your are ready to make call to the API on behalf of the user.
 ## Making GET calls
 
 ```GO
-client := sdk.NewClient()
+client := sdk.NewClient(123456,"client secret")
 client.Get("/items")
 
 ```
@@ -63,7 +64,7 @@ client.Get("/items")
 ## Making POST calls
 
 ```GO
-client := sdk.NewClient()
+client := sdk.NewClient(123456,"client secret")
 client.Post("/items")
 
 ```
@@ -75,7 +76,7 @@ client.Post("/items")
 ## Making DELETE calls
 
 ```GO
-client := sdk.NewClient()
+client := sdk.NewClient(123456,"client secret")
 client.Delete("/items/123")
 ```
 
