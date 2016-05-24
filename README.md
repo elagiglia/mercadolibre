@@ -23,13 +23,12 @@ The first thing to do is to instance a ```Client``` object. You'll need to give 
 
 ```go
 client := sdk.NewClient(123456,"client secret")
-
 ```
 With this instance you can start working on MercadoLibre's APIs.
 
 There are some design considerations worth to mention.
-1. This SDK is just a thin layer on top of an http client to handle all the OAuth WebServer flow for you.
-2. There is no JSON parsing. This is left to you.
+This SDK is just a thin layer on top of an http client to handle all the OAuth WebServer flow for you.
+
 
 ## How do I redirect users to authorize my application?
 
@@ -48,15 +47,15 @@ This will give you the url to redirect the user. You need to specify a callback 
 Once the user is redirected to your callback url, you'll receive in the query string, a parameter named ```code```. You'll need this for the second part of the process.
 
 ```go
-    authorization, err := client.Authorize("TG-57445a71e4b0744714824b93-19793657","https://www.example.com")
+authorization, err := client.Authorize("TG-57445a71e4b0744714824b93-19793657","https://www.example.com")
 
-	if err != nil {
-		log.Printf("err: %s", err.Error())
-		return
-	}
+if err != nil {
+    log.Printf("err: %s", err.Error())
+    return
+}
 
-	js, err := json.Marshal(authorization)
-	fmt.Printf("Token:%s\n", js)
+js, err := json.Marshal(authorization)
+fmt.Printf("Token:%s\n", js)
 ```
 
 This will get an ```accessToken``` and a ```refreshToken``` (is case your application has the ```offline_access```) for your application and your user.
@@ -79,8 +78,15 @@ fmt.Printf("response:%s\n", userInfo)
 ## Making POST calls
 
 ```GO
-client := sdk.NewClient(123456,"client secret")
-client.Post("/items")
+body :=	"{\"title\":\"Item de test - No Ofertar\",\"category_id\":\"MLA1912\",\"price\":10,\"currency_id\":\"ARS\",\"available_quantity\":1,\"buying_mode\":\"buy_it_now\",\"listing_type_id\":\"bronze\",\"condition\":\"new\",\"description\": \"Item:,  Ray-Ban WAYFARER Gloss Black RB2140 901  Model: RB2140. Size: 50mm. Name: WAYFARER. Color: Gloss Black. Includes Ray-Ban Carrying Case and Cleaning Cloth. New in Box\",\"video_id\": \"YOUTUBE_ID_HERE\",\"warranty\": \"12 months by Ray Ban\",\"pictures\":[{\"source\":\"http://upload.wikimedia.org/wikipedia/commons/f/fd/Ray_Ban_Original_Wayfarer.jpg\"},{\"source\":\"http://en.wikipedia.org/wiki/File:Teashades.gif\"}]}"
+
+resp, err = client.Post("/items", authorization, body)
+
+if err != nil {
+    log.Printf("Error %s\n", err.Error())
+}
+userInfo, _= ioutil.ReadAll(resp.Body)
+fmt.Printf("response:%s\n", userInfo)
 
 ```
 ## Making PUT calls
@@ -108,6 +114,6 @@ You can contact us if you have questions using the standard communication channe
 
 That is great! Just fork the project in github. Create a topic branch, write some code, and add some tests for your new code.
 
-To run the tests run ```make all```.
+To run the tests run ```make test```.
 
 Thanks for helping!
