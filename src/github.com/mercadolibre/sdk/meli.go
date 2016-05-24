@@ -23,6 +23,7 @@ import (
     "io/ioutil"
     "log"
     "strings"
+    "errors"
 )
 
 const (
@@ -104,10 +105,14 @@ func (client Client) Authorize(code, redirectUri string) (*Authorization, error)
         return nil, err
     }
 
+    if resp.StatusCode != http.StatusOK {
+        return nil, errors.New("There was an error while authorizing. Check wether your code has not expired.")
+    }
+
     body, err := ioutil.ReadAll(resp.Body)
 
     if err := json.Unmarshal(body, authorization); err != nil {
-        log.Printf("Error while receiving the authorization %s %s", err, body)
+        log.Printf("Error while receiving the authorization %s %s", err.Error(), body)
         return nil, err
     }
 
@@ -125,7 +130,7 @@ func (client Client) Get(resource_path string, authorization *Authorization) (*h
 
     resp, err := http.Get(final_url)
     if err != nil {
-        fmt.Printf("Error while calling url: %s \n Error: %s", final_url, err)
+        fmt.Printf("Error while calling url: %s \n Error: %s", final_url, err.Error())
         return nil, err
     }
 
@@ -136,7 +141,7 @@ func (client Client) Get(resource_path string, authorization *Authorization) (*h
         resp, err = http.Get(base_url + "?access_token=" + url.QueryEscape(authorization.Access_token))
 
         if err != nil {
-            log.Printf("Error while calling API %s\n", err)
+            log.Printf("Error while calling API %s\n", err.Error())
             return nil, err
         }
     }
@@ -146,8 +151,6 @@ func (client Client) Get(resource_path string, authorization *Authorization) (*h
 
 //TODO: Try to return an Authorization object instead of changing the original one passed by param.
 func (client Client) RefreshToken(authorization *Authorization) error {
-
-    log.Printf("Refreshing token\n")
 
     var base_url bytes.Buffer
     base_url.WriteString(client.apiUrl)
@@ -160,16 +163,20 @@ func (client Client) RefreshToken(authorization *Authorization) error {
 
     resp, err := http.Post(base_url.String(), "application/json", *(new(io.Reader)))
 
-    if err != nil || resp.StatusCode != http.StatusOK {
+    if err != nil {
 
-        log.Printf("Error while refreshing token: http status: %s err: %s\n", resp.StatusCode, err)
+        log.Printf("Error while refreshing token: %s\n", err.Error())
         return err
+    }
+
+    if resp.StatusCode != http.StatusOK {
+        return errors.New("Refreshing token returned status code " + resp.Status)
     }
 
     body, err := ioutil.ReadAll(resp.Body)
 
     if err := json.Unmarshal(body, authorization); err != nil {
-        log.Printf("Error while receiving the authorization %s %s", err, body)
+        log.Printf("Error while receiving the authorization %s %s", err.Error(), body)
         return err
     }
 
@@ -206,6 +213,7 @@ func (client Client) Post(resource_path string, authorization *Authorization, bo
 
     return resp, nil
 }
+
 func (client Client) Put(resource_path string, authorization *Authorization, body *string) (*http.Response, error){
 
     base_url := client.apiUrl + resource_path
@@ -227,7 +235,7 @@ func (client Client) Put(resource_path string, authorization *Authorization, bod
 
 
     if err != nil {
-        fmt.Printf("Error while calling url: %s \n Error: %s", final_url, err)
+        fmt.Printf("Error while calling url: %s\n Error: %s", final_url, err)
         return nil, err
     }
 
@@ -286,7 +294,7 @@ func (client Client) Delete(resource_path string, authorization *Authorization) 
 }
 
 /*
-If a refresh token is present in the authorization code exchange, then it may be used to obtain new access tokens at any time.
+If a refresh token is present in the authorization code exchange, then it may be used to obtain a new access tokens at any time.
 */
 type Authorization struct {
     Access_token string

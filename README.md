@@ -38,7 +38,9 @@ This is a 2 step process.
 First get the link to redirect the user. This is very easy! Just:
 
 ```go
-
+client := sdk.NewClient(191151416211796, "qM66avGpv5rcQxNWF4sno5oH7Cjph0I7")
+url := client.GetAuthURL(sdk.MLA,"https://www.example.com")
+fmt.Printf("url:%s\n", url)
 ```
 
 This will give you the url to redirect the user. You need to specify a callback url which will be the one that the user will redirected after a successfull authrization process.
@@ -46,7 +48,15 @@ This will give you the url to redirect the user. You need to specify a callback 
 Once the user is redirected to your callback url, you'll receive in the query string, a parameter named ```code```. You'll need this for the second part of the process.
 
 ```go
+    authorization, err := client.Authorize("TG-57445a71e4b0744714824b93-19793657","https://www.example.com")
 
+	if err != nil {
+		log.Printf("err: %s", err.Error())
+		return
+	}
+
+	js, err := json.Marshal(authorization)
+	fmt.Printf("Token:%s\n", js)
 ```
 
 This will get an ```accessToken``` and a ```refreshToken``` (is case your application has the ```offline_access```) for your application and your user.
@@ -56,8 +66,13 @@ At this stage your are ready to make call to the API on behalf of the user.
 ## Making GET calls
 
 ```GO
-client := sdk.NewClient(123456,"client secret")
-client.Get("/items")
+resp, err := client.Get("/users/me", authorization)
+
+if err != nil {
+	log.Printf("Error %s\n", err.Error())
+}
+userInfo, _:= ioutil.ReadAll(resp.Body)
+fmt.Printf("response:%s\n", userInfo)
 
 ```
 
@@ -77,7 +92,7 @@ client.Post("/items")
 
 ```GO
 client := sdk.NewClient(123456,"client secret")
-client.Delete("/items/123")
+client.Delete("/items/123", authorization)
 ```
 
 ## Do I always need to include the ```access_token``` as a parameter?

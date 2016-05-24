@@ -54,6 +54,22 @@ func Test_That_Authorization_Process_Works(t *testing.T) {
 
 }
 
+func Test_That_Authorization_Process_Returns_An_Error_When_Code_Has_Expired(t *testing.T) {
+
+    client := NewClient(CLIENT_ID, CLIENT_SECRET)
+    client.SetApiURL(API_TEST)
+
+    _, err := client.Authorize("bad code", "http://someurl.com")
+
+    if err == nil {
+        t.FailNow()
+    }
+    if err.Error() != "There was an error while authorizing. Check wether your code has not expired." {
+        t.FailNow()
+    }
+
+}
+
 func Test_GET_public_API_sites_works_properly ( t *testing.T){
 
     client := NewClient(CLIENT_ID, CLIENT_SECRET)
@@ -108,7 +124,7 @@ func Test_GET_private_API_users_returns_an_error_when_refresh_token_is_not_valid
     resp, err := client.Get("/users/me", &authorization)
 
     if err != nil {
-        fmt.Printf("Error: %s\n", err)
+        fmt.Printf("Error: %s\n", err.Error())
         t.FailNow()
     }
 
