@@ -1,10 +1,10 @@
-test:
+utest:
 	cd mockapi ; npm install
 	node mockapi/app.js &
 	export GOPATH=export PWD=`pwd`
 	go test -v src/github.com/mercadolibre/sdk/*
 		
-	kill `cat /tmp/mockapi.pid`
+#	kill `cat /tmp/mockapi.pid`
 
 deploy:
 	export GOPATH=export PWD=`pwd`
@@ -13,5 +13,10 @@ deploy:
 	#node mockapi/app.js &
 	#mvn -DaltDeploymentRepository=snapshot-repo::default::file:../java-sdk-repo/snapshots clean deploy
 	#kill `cat /tmp/mockapi.pid`
+kill:
+	kill `cat /tmp/mockapi.pid`
+test:
+	${MAKE} utest
+	${MAKE} kill
 
-.PHONY: test
+.PHONY: test utest deploy

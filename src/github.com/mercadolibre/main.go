@@ -11,6 +11,7 @@ import (
 
 func main() {
 
+
 	/*Example 1)
 	  Getting the URL to call for authenticating purposes
 	  Once you generate the URL and call it, you will be redirect to a ML login page where your credentials will be asked. Then, after
@@ -26,7 +27,7 @@ func main() {
 	  use the  CODE returned in the previous example.
 	*/
 
-	authorization, err := client.Authorize("TG-57445a71e4b0744714824b93-19793657","https://www.example.com")
+	authorization, err := client.Authorize("TG-57446f57e4b0cd95947d4792-214509008","https://www.example.com")
 
 	if err != nil {
 		log.Printf("err: %s", err.Error())
@@ -60,6 +61,22 @@ func main() {
 	client.RefreshToken(authorization)
 	js, err = json.Marshal(authorization)
 	fmt.Printf("Token:%s\n", js)
+
+	/*
+	  Example 5)
+	  Post an item.
+	  */
+
+	body :=	"{\"title\":\"Item de test - No Ofertar\",\"category_id\":\"MLA5529\",\"price\":10,\"currency_id\":\"ARS\",\"available_quantity\":1,\"buying_mode\":\"buy_it_now\",\"listing_type_id\":\"bronze\",\"condition\":\"new\",\"description\": \"Item:,  Ray-Ban WAYFARER Gloss Black RB2140 901  Model: RB2140. Size: 50mm. Name: WAYFARER. Color: Gloss Black. Includes Ray-Ban Carrying Case and Cleaning Cloth. New in Box\",\"video_id\": \"YOUTUBE_ID_HERE\",\"warranty\": \"12 months by Ray Ban\",\"pictures\":[{\"source\":\"http://upload.wikimedia.org/wikipedia/commons/f/fd/Ray_Ban_Original_Wayfarer.jpg\"},{\"source\":\"http://en.wikipedia.org/wiki/File:Teashades.gif\"}]}"
+	
+
+	resp, err = client.Post("/items", authorization, body)
+
+	if err != nil {
+		log.Printf("Error %s\n", err.Error())
+	}
+	userInfo, _= ioutil.ReadAll(resp.Body)
+	fmt.Printf("response:%s\n", userInfo)
 
 }
 

@@ -7,7 +7,7 @@ The are two main structures:
 1) - This structure keeps within the secret to be used for generating the token to be sent when calling to the private APIs.
      This also provides several methods to call either public and private APIs
 
-2) - This structure keeps the tokens and their expiration time and has to be passed by param each time a call has to be perforemed to any private API. 
+2) - This structure keeps the tokens and their expiration time and has to be passed by param each time a call has to be performed to any private API.
 */
 
 package sdk
@@ -53,7 +53,7 @@ type Client struct {
     clientSecret string
 }
 /*
-clientId: ID that is generated when you create your application
+clientId and clientSecret are  generated when you create your application
 */
 func NewClient(clientId int64, clientSecret string) *Client {
 
