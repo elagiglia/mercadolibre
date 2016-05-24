@@ -64,7 +64,7 @@ At this stage your are ready to make call to the API on behalf of the user.
 
 ## Making GET calls
 
-```GO
+```go
 resp, err := client.Get("/users/me", authorization)
 
 if err != nil {
@@ -77,7 +77,7 @@ fmt.Printf("response:%s\n", userInfo)
 
 ## Making POST calls
 
-```GO
+```go
 body :=	"{\"title\":\"Item de test - No Ofertar\",\"category_id\":\"MLA1912\",\"price\":10,\"currency_id\":\"ARS\",\"available_quantity\":1,\"buying_mode\":\"buy_it_now\",\"listing_type_id\":\"bronze\",\"condition\":\"new\",\"description\": \"Item:,  Ray-Ban WAYFARER Gloss Black RB2140 901  Model: RB2140. Size: 50mm. Name: WAYFARER. Color: Gloss Black. Includes Ray-Ban Carrying Case and Cleaning Cloth. New in Box\",\"video_id\": \"YOUTUBE_ID_HERE\",\"warranty\": \"12 months by Ray Ban\",\"pictures\":[{\"source\":\"http://upload.wikimedia.org/wikipedia/commons/f/fd/Ray_Ban_Original_Wayfarer.jpg\"},{\"source\":\"http://en.wikipedia.org/wiki/File:Teashades.gif\"}]}"
 
 resp, err = client.Post("/items", authorization, body)
@@ -92,7 +92,15 @@ fmt.Printf("response:%s\n", userInfo)
 ## Making PUT calls
 
 ```GO
+change := "{\"available_quantity\": 6}"
 
+resp, err = client.Put("/items/" + item.Id, authorization, &change)
+
+if err != nil {
+    log.Printf("Error %s\n", err.Error())
+}
+userInfo, _= ioutil.ReadAll(resp.Body)
+fmt.Printf("response:%s\n", userInfo)
 ```
 ## Making DELETE calls
 

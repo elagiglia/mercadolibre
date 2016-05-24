@@ -43,7 +43,7 @@ func main() {
 	  use the  CODE returned in the previous example.
 	*/
 
-	authorization, err := client.Authorize("TG-574473f0e4b07d84ecb42f00-214509008","https://www.example.com")
+	authorization, err := client.Authorize("TG-5744a39de4b08aeaefbf321f-214509008","https://www.example.com")
 
 	if err != nil {
 		log.Printf("err: %s", err.Error())
@@ -90,14 +90,30 @@ func main() {
 	if err != nil {
 		log.Printf("Error %s\n", err.Error())
 	}
-	userInfo, _= ioutil.ReadAll(resp.Body)
-	fmt.Printf("response:%s\n", userInfo)
+	itemAsJs, _ := ioutil.ReadAll(resp.Body)
+	fmt.Printf("response:%s\n", itemAsJs)
+
+	item := new(item)
+	err = json.Unmarshal(itemAsJs, item)
+	fmt.Printf("ItemId:%s\n", item.Id)
 
 	/*
 	  Example 6)
-	  This example shows you how to post a new Item.
+	  This example shows you how to PUT a change in an Item.
 	 */
 
+	change := "{\"available_quantity\": 6}"
+
+	resp, err = client.Put("/items/" + item.Id, authorization, &change)
+
+	if err != nil {
+		log.Printf("Error %s\n", err.Error())
+	}
+	userInfo, _= ioutil.ReadAll(resp.Body)
+	fmt.Printf("response:%s\n", userInfo)
 
 }
 
+type item struct {
+	Id string
+}
