@@ -22,6 +22,7 @@ import (
     "fmt"
     "net/http"
     "io/ioutil"
+    "strings"
 )
 
 const (
@@ -266,4 +267,33 @@ func Test_DELETE_an_item_returns_200_when_token_IS_EXPIRED (t *testing.T){
         log.Printf("Error while putting a new item. Status code: %s\n", resp.StatusCode)
         t.FailNow()
     }
+}
+
+func Test_AuthorizationURL_adds_a_params_separator_when_needed(t *testing.T)  {
+    client := NewClient(1234, "abcdedfadafas")
+    auth := NewAuthorizationURL(client.apiUrl + "/authorizationauth")
+    auth.addGrantType(AUTHORIZATION_CODE)
+
+    url := client.apiUrl + "/authorizationauth?" + "grant_type=" + AUTHORIZATION_CODE
+
+    if strings.Compare(url, auth.string()) != 0 {
+        log.Printf("url was different from what was expected\n expected: %s \n obtained: %s \n", url, auth.string())
+        t.FailNow()
+    }
+
+}
+
+func Test_AuthorizationURL_adds_a_query_param_separator_when_needed(t *testing.T)  {
+    client := NewClient(1234, "abcdedfadafas")
+    auth := NewAuthorizationURL(client.apiUrl + "/authorizationauth")
+    auth.addGrantType(AUTHORIZATION_CODE)
+    auth.addClientId(1213213)
+
+    url := client.apiUrl + "/authorizationauth?" + "grant_type=" + AUTHORIZATION_CODE + "&client_id=1213213"
+
+    if strings.Compare(url, auth.string()) != 0 {
+        log.Printf("url was different from what was expected\n expected: %s \n obtained: %s \n", url, auth.string())
+        t.FailNow()
+    }
+
 }

@@ -24,9 +24,7 @@ import (
 	"io/ioutil"
 )
 
-
 func main() {
-
 
 	/*Example 1)
 	  Getting the URL to call for authenticating purposes
@@ -37,13 +35,11 @@ func main() {
 	url := client.GetAuthURL(sdk.MLA,"https://www.example.com")
 	fmt.Printf("url:%s\n", url)
 
-
 	/* Example 2)
 	  To get all the tokens which will allow you to access the APIs, you need to call the Authorize method. As parameter you need to
 	  use the  CODE returned in the previous example.
 	*/
-
-	authorization, err := client.Authorize("TG-5744a39de4b08aeaefbf321f-214509008","https://www.example.com")
+	authorization, err := client.Authorize("TG-5746f545e4b08aeaf0041759-214509008","https://www.example.com")
 
 	if err != nil {
 		log.Printf("err: %s", err.Error())
@@ -64,6 +60,7 @@ func main() {
 		log.Printf("Error %s\n", err.Error())
 	}
 	userInfo, _:= ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
 	fmt.Printf("response:%s\n", userInfo)
 
 
@@ -91,6 +88,7 @@ func main() {
 		log.Printf("Error %s\n", err.Error())
 	}
 	itemAsJs, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
 	fmt.Printf("response:%s\n", itemAsJs)
 
 	item := new(item)
@@ -111,7 +109,6 @@ func main() {
 	}
 	userInfo, _= ioutil.ReadAll(resp.Body)
 	fmt.Printf("response:%s\n", userInfo)
-
 }
 
 type item struct {

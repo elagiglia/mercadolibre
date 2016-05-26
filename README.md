@@ -121,6 +121,7 @@ You can contact us if you have questions using the standard communication channe
 ## I want to contribute!
 
 That is great! Just fork the project in github. Create a topic branch, write some code, and add some tests for your new code.
+You can find some examples by taking a look at the main.go file.
 
 To run the tests run ```make test```.
 
