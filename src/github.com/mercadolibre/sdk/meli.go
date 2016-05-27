@@ -41,6 +41,7 @@ import (
     "log"
     "strings"
     "errors"
+    "time"
 )
 
 const (
@@ -61,7 +62,10 @@ const (
 
     AUTHORIZATION_CODE = "authorization_code"
     REFRESH_TOKEN = "refresh_token"
+
 )
+var ANONYMOUS = Authorization{}
+//var refTokenMux = &sync.Mutex{}
 
 func init() {
     log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -128,14 +132,15 @@ func (client Client) Authorize(code, redirectUri string) (*Authorization, error)
         return nil, err
     }
 
+    authorization.Received_at = time.Now().Unix()
     return authorization, nil
 }
 
-func (client Client) Get(resource_path string, authorization *Authorization) (*http.Response, error) {
+func (client Client) Get(resource_path string, authorization Authorization) (*http.Response, error) {
 
     apiUrl := NewAuthorizationURL(client.apiUrl + resource_path)
 
-    if authorization != nil {
+    if authorization != ANONYMOUS {
         apiUrl.addAccessToken(authorization.Access_token)
     }
 
@@ -145,9 +150,14 @@ func (client Client) Get(resource_path string, authorization *Authorization) (*h
         return nil, err
     }
 
-    if resp.StatusCode == http.StatusNotFound {
+   /* if resp.StatusCode == http.StatusNotFound {
+        err := refreshTokenIfNeeded(client, authorization)
+        //err := client.RefreshToken(authorization)
+        if err != nil {
+            log.Printf("Error while refreshing token %s\n", err.Error())
+            return nil, err
+        }
 
-        client.RefreshToken(authorization)
         apiUrl := NewAuthorizationURL(client.apiUrl + resource_path)
         apiUrl.addAccessToken(authorization.Access_token)
         resp, err = http.Get(apiUrl.string())
@@ -156,47 +166,17 @@ func (client Client) Get(resource_path string, authorization *Authorization) (*h
             log.Printf("Error while calling API %s\n", err.Error())
             return nil, err
         }
-    }
+    }*/
 
     return resp, nil
 }
 
-//TODO: Try to return an Authorization object instead of changing the original one passed by param.
-func (client Client) RefreshToken(authorization *Authorization) error {
 
-    authorizationURL := NewAuthorizationURL(client.apiUrl + "/oauth/token")
-    authorizationURL.addGrantType(REFRESH_TOKEN)
-    authorizationURL.addClientId(client.clientId)
-    authorizationURL.addClientSecret(client.clientSecret)
-    authorizationURL.addRefreshToken(authorization.Refresh_token)
-
-    resp, err := http.Post(authorizationURL.string(), "application/json", *(new(io.Reader)))
-
-    if err != nil {
-        log.Printf("Error while refreshing token: %s\n", err.Error())
-        return err
-    }
-
-    if resp.StatusCode != http.StatusOK {
-        return errors.New("Refreshing token returned status code " + resp.Status)
-    }
-
-    body, err := ioutil.ReadAll(resp.Body)
-    resp.Body.Close()
-
-    if err := json.Unmarshal(body, authorization); err != nil {
-        log.Printf("Error while receiving the authorization %s %s", err.Error(), body)
-        return err
-    }
-
-    return nil
-}
-
-func (client Client) Post(resource_path string, authorization *Authorization, body string) (*http.Response, error){
+func (client Client) Post(resource_path string, authorization Authorization, body string) (*http.Response, error){
 
     apiUrl := NewAuthorizationURL(client.apiUrl + resource_path)
 
-    if authorization != nil {
+    if authorization != ANONYMOUS {
         apiUrl.addAccessToken(authorization.Access_token)
     }
 
@@ -207,9 +187,15 @@ func (client Client) Post(resource_path string, authorization *Authorization, bo
         return nil, err
     }
 
-    if resp.StatusCode == http.StatusNotFound {
+  /*  if resp.StatusCode == http.StatusNotFound {
 
-        client.RefreshToken(authorization)
+        err := refreshTokenIfNeeded(client, authorization)
+        //err :=client.RefreshToken(authorization)
+        if err != nil {
+            log.Printf("Error while refreshing token %s\n", err.Error())
+            return nil, err
+        }
+
         apiUrl := NewAuthorizationURL(client.apiUrl + resource_path)
         apiUrl.addAccessToken(authorization.Access_token)
 
@@ -219,16 +205,16 @@ func (client Client) Post(resource_path string, authorization *Authorization, bo
             log.Printf("Error while calling API %s\n", err)
             return nil, err
         }
-    }
+    }*/
 
     return resp, nil
 }
 
-func (client Client) Put(resource_path string, authorization *Authorization, body *string) (*http.Response, error){
+func (client Client) Put(resource_path string, authorization Authorization, body *string) (*http.Response, error){
 
     apiUrl := NewAuthorizationURL(client.apiUrl + resource_path)
 
-    if authorization != nil {
+    if authorization != ANONYMOUS {
         apiUrl.addAccessToken(authorization.Access_token)
     }
 
@@ -246,9 +232,15 @@ func (client Client) Put(resource_path string, authorization *Authorization, bod
         return nil, err
     }
 
-    if resp.StatusCode == http.StatusNotFound {
+   /* if resp.StatusCode == http.StatusNotFound {
 
-        client.RefreshToken(authorization)
+        //err := client.RefreshToken(authorization)
+        err := refreshTokenIfNeeded(client, authorization)
+        if err != nil {
+            log.Printf("Error while refreshing token %s\n", err.Error())
+            return nil, err
+        }
+
         apiUrl := NewAuthorizationURL(client.apiUrl + resource_path)
         apiUrl.addAccessToken(authorization.Access_token)
 
@@ -260,16 +252,16 @@ func (client Client) Put(resource_path string, authorization *Authorization, bod
 
         req.Header.Add("Content-Type", "application/json")
         resp, err = http.DefaultClient.Do(req)
-    }
+    }*/
 
     return resp, nil
 }
 
-func (client Client) Delete(resource_path string, authorization *Authorization) (*http.Response, error) {
+func (client Client) Delete(resource_path string, authorization Authorization) (*http.Response, error) {
 
     apiUrl := NewAuthorizationURL(client.apiUrl + resource_path)
 
-    if authorization != nil {
+    if authorization != ANONYMOUS {
         apiUrl.addAccessToken(authorization.Access_token)
     }
 
@@ -286,9 +278,15 @@ func (client Client) Delete(resource_path string, authorization *Authorization) 
         return nil, err
     }
 
-    if resp.StatusCode == http.StatusNotFound {
+    /*if resp.StatusCode == http.StatusNotFound {
 
-        client.RefreshToken(authorization)
+        //err := client.RefreshToken(authorization)
+        err := refreshTokenIfNeeded(client, authorization)
+        if err != nil {
+            log.Printf("Error while refreshing token %s\n", err.Error())
+            return nil, err
+        }
+
         apiUrl := NewAuthorizationURL(client.apiUrl + resource_path)
         apiUrl.addAccessToken(authorization.Access_token)
 
@@ -299,9 +297,43 @@ func (client Client) Delete(resource_path string, authorization *Authorization) 
         }
 
         resp, err = http.DefaultClient.Do(req)
-    }
+    }*/
 
     return resp, nil
+}
+
+
+func (client Client) RefreshToken(authorization Authorization) (*Authorization, error) {
+
+    authorizationURL := NewAuthorizationURL(client.apiUrl + "/oauth/token")
+    authorizationURL.addGrantType(REFRESH_TOKEN)
+    authorizationURL.addClientId(client.clientId)
+    authorizationURL.addClientSecret(client.clientSecret)
+    authorizationURL.addRefreshToken(authorization.Refresh_token)
+
+    resp, err := http.Post(authorizationURL.string(), "application/json", *(new(io.Reader)))
+
+    if err != nil {
+        log.Printf("Error while refreshing token: %s\n", err.Error())
+        return nil, err
+    }
+
+    if resp.StatusCode != http.StatusOK {
+        return nil, errors.New("Refreshing token returned status code " + resp.Status)
+    }
+
+    body, err := ioutil.ReadAll(resp.Body)
+    resp.Body.Close()
+
+    newAuth := authorization
+    if err := json.Unmarshal(body, &newAuth); err != nil {
+        log.Printf("Error while receiving the authorization %s %s", err.Error(), body)
+        return nil, err
+    }
+
+    newAuth.Received_at = time.Now().Unix()
+
+    return &newAuth, nil
 }
 
 /*
@@ -312,10 +344,20 @@ type Authorization struct {
     Access_token string
     Token_type string
     Expires_in int16
+    Received_at int64
     Refresh_token string
     Scope string
 }
 
+func (auth Authorization) isExpired() bool {
+
+    return ((auth.Received_at + int64(auth.Expires_in)) <= time.Now().Unix())
+}
+
+
+/*
+This struct allows adding all the params needed to the URL to be sent
+*/
 type AuthorizationURL struct{
     url bytes.Buffer
 }

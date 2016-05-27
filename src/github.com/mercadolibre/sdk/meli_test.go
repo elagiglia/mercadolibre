@@ -93,7 +93,7 @@ func Test_GET_public_API_sites_works_properly ( t *testing.T){
     client.SetApiURL(API_TEST)
 
     //Public APIs do not need Authorization
-    resp, err := client.Get("/sites", new (Authorization))
+    resp, err := client.Get("/sites", ANONYMOUS)
 
     if err != nil {
         t.FailNow()
@@ -118,7 +118,7 @@ func Test_GET_private_API_users_works_properly (t *testing.T){
 
     authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
-    resp, err := client.Get("/users/me", &authorization)
+    resp, err := client.Get("/users/me", authorization)
 
     if err != nil {
         fmt.Printf("Error: %s\n", err)
@@ -126,8 +126,11 @@ func Test_GET_private_API_users_works_properly (t *testing.T){
     }
 
     if resp.StatusCode != http.StatusOK {
-        fmt.Printf("\nThe expected http status code is 200 but the received one was: %s\n", resp.Status)
-        t.FailNow()
+        newAuth, _ := client.RefreshToken(authorization)
+        _, err := client.Get("/users/me", *newAuth)
+        if err != nil {
+            t.FailNow()
+        }
     }
 }
 
@@ -138,15 +141,10 @@ func Test_GET_private_API_users_returns_an_error_when_refresh_token_is_not_valid
 
     authorization := Authorization{Access_token:"expired token", Refresh_token:"no valid"}
 
-    resp, err := client.Get("/users/me", &authorization)
+    _, err := client.Get("/users/me", authorization)
 
-    if err != nil {
-        fmt.Printf("Error: %s\n", err.Error())
-        t.FailNow()
-    }
-
-    if resp.StatusCode != http.StatusNotFound {
-        fmt.Printf("\nThe expected http status code is 200 but the received one was: %s\n", resp.Status)
+    if err == nil {
+        fmt.Printf("Error should not be nil")
         t.FailNow()
     }
 }
@@ -158,11 +156,19 @@ func Test_POST_a_new_item_works_properly_when_token_IS_EXPIRED(t *testing.T){
     authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
     body := "{\"foo\":\"bar\"}"
-    resp, err := client.Post("/items", &authorization, body)
+    resp, err := client.Post("/items", authorization, body)
 
     if err != nil {
         log.Printf("Error while posting a new item %s\n", err)
         t.FailNow()
+    }
+
+    if resp.StatusCode != http.StatusOK {
+        newAuth, _ := client.RefreshToken(authorization)
+        resp, err = client.Post("/items", *newAuth, body)
+        if err != nil {
+            t.FailNow()
+        }
     }
 
     if resp.StatusCode != http.StatusCreated {
@@ -178,7 +184,7 @@ func Test_POST_a_new_item_works_properly_when_token_IS_NOT_EXPIRED (t *testing.T
     authorization := Authorization{Access_token:"valid token", Refresh_token:"valid refresh token"}
 
     body := "{\"foo\":\"bar\"}"
-    resp, err := client.Post("/items", &authorization, body)
+    resp, err := client.Post("/items", authorization, body)
 
     if err != nil {
         log.Printf("Error while posting a new item %s\n", err)
@@ -198,7 +204,7 @@ func Test_PUT_a_new_item_works_properly_when_token_IS_NOT_EXPIRED (t *testing.T)
     authorization := Authorization{Access_token:"valid token", Refresh_token:"valid refresh token"}
 
     body := "{\"foo\":\"bar\"}"
-    resp, err := client.Put("/items/123", &authorization, &body)
+    resp, err := client.Put("/items/123", authorization, &body)
 
     if err != nil {
         log.Printf("Error while posting a new item %s\n", err)
@@ -218,8 +224,15 @@ func Test_PUT_a_new_item_works_properly_when_token_IS_EXPIRED (t *testing.T){
     authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
     body := "{\"foo\":\"bar\"}"
-    resp, err := client.Put("/items/123", &authorization, &body)
+    resp, err := client.Put("/items/123", authorization, &body)
 
+    if resp.StatusCode != http.StatusOK {
+        newAuth, _ := client.RefreshToken(authorization)
+        resp, err = client.Put("/items/123", *newAuth, &body)
+        if err != nil {
+            t.FailNow()
+        }
+    }
     if err != nil {
         log.Printf("Error while posting a new item %s\n", err)
         t.FailNow()
@@ -237,7 +250,7 @@ func Test_DELETE_an_item_returns_200_when_token_IS_NOT_EXPIRED (t *testing.T){
     client.SetApiURL(API_TEST)
     authorization := Authorization{Access_token:"valid token", Refresh_token:"valid refresh token"}
 
-    resp, err := client.Delete("/items/123", &authorization)
+    resp, err := client.Delete("/items/123", authorization)
 
     if err != nil {
         log.Printf("Error while deleting an item %s\n", err)
@@ -256,13 +269,20 @@ func Test_DELETE_an_item_returns_200_when_token_IS_EXPIRED (t *testing.T){
     client.SetApiURL(API_TEST)
     authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
 
-    resp, err := client.Delete("/items/123", &authorization)
+    resp, err := client.Delete("/items/123", authorization)
 
     if err != nil {
         log.Printf("Error while deleting an item %s\n", err)
         t.FailNow()
     }
 
+    if resp.StatusCode != http.StatusOK {
+        newAuth, _ := client.RefreshToken(authorization)
+        resp, err = client.Delete("/items/123", *newAuth)
+        if err != nil {
+            t.FailNow()
+        }
+    }
     if resp.StatusCode != http.StatusOK {
         log.Printf("Error while putting a new item. Status code: %s\n", resp.StatusCode)
         t.FailNow()
@@ -280,7 +300,6 @@ func Test_AuthorizationURL_adds_a_params_separator_when_needed(t *testing.T)  {
         log.Printf("url was different from what was expected\n expected: %s \n obtained: %s \n", url, auth.string())
         t.FailNow()
     }
-
 }
 
 func Test_AuthorizationURL_adds_a_query_param_separator_when_needed(t *testing.T)  {
@@ -295,5 +314,17 @@ func Test_AuthorizationURL_adds_a_query_param_separator_when_needed(t *testing.T
         log.Printf("url was different from what was expected\n expected: %s \n obtained: %s \n", url, auth.string())
         t.FailNow()
     }
+}
 
+func Test_only_one_token_refresh_call_is_done_when_several_threads_are_executed(t *testing.T){
+
+    client := NewClient(CLIENT_ID, CLIENT_SECRET)
+    client.SetApiURL(API_TEST)
+    authorization := Authorization{Access_token:"expired token", Refresh_token:"valid refresh token"}
+
+    for i := 0; i< 10 ; i++ {
+
+        go client.Get("/users/me", authorization)
+
+    }
 }
