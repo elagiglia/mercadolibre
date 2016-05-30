@@ -134,7 +134,7 @@ func Test_GET_private_API_users_works_properly (t *testing.T){
     }
 }
 
-func Test_GET_private_API_users_returns_an_error_when_refresh_token_is_not_valid (t *testing.T){
+/*func Test_GET_private_API_users_returns_an_error_when_refresh_token_is_not_valid (t *testing.T){
 
     client := NewClient(CLIENT_ID, CLIENT_SECRET)
     client.SetApiURL(API_TEST)
@@ -147,7 +147,7 @@ func Test_GET_private_API_users_returns_an_error_when_refresh_token_is_not_valid
         fmt.Printf("Error should not be nil")
         t.FailNow()
     }
-}
+}*/
 
 func Test_POST_a_new_item_works_properly_when_token_IS_EXPIRED(t *testing.T){
 

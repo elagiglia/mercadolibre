@@ -40,7 +40,7 @@ func main() {
 	  To get all the tokens which will allow you to access the APIs, you need to call the Authorize method. As parameter you need to
 	  use the  CODE returned in the previous example.
 	*/
-	authorization, err := client.Authorize("TG-5748b36ce4b05f929cdcc577-214509008","https://www.example.com")
+	authorization, err := client.Authorize("TG-574c320ee4b0d077dbec5daf-214509008","https://www.example.com")
 
 	if err != nil {
 		log.Printf("Error: %s", err.Error())

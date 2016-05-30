@@ -311,6 +311,7 @@ func (client Client) RefreshToken(authorization Authorization) (*Authorization, 
     authorizationURL.addClientSecret(client.clientSecret)
     authorizationURL.addRefreshToken(authorization.Refresh_token)
 
+    log.Printf(authorizationURL.string())
     resp, err := http.Post(authorizationURL.string(), "application/json", *(new(io.Reader)))
 
     if err != nil {
