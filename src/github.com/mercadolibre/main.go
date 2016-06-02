@@ -25,14 +25,20 @@ import (
 	"net/http"
 )
 
+const (
+	CLIENT_CODE = "TG-574c8372e4b08aeaf07ca79e-214509008"
+	CLIENT_ID = 396051416295796
+	CLIENT_SECRET = "qM66avGpv5rcQxNWF4sno5oH7Cjph0I7"
+)
+
 func main() {
 
 	/*Example 1)
 	  Getting the URL to call for authenticating purposes
-	  Once you generate the URL and call it, you will be redirect to a ML login page where your credentials will be asked. Then, after
+	  Once you generate the URL and call it, you will be redirected to a ML login page where your credentials will be asked. Then, after
 	  entering your credentials you will obtained a CODE which will be used to get all the authorization tokens.
 	*/
-	client := sdk.NewClient(396051416295796, "qM66avGpv5rcQxNWF4sno5oH7Cjph0I7")
+	client := sdk.NewClient(CLIENT_ID, CLIENT_SECRET)
 	url := client.GetAuthURL(sdk.MLA,"https://www.example.com")
 	fmt.Printf("Example 1) \n\t Returning Authentication URL:%s\n", url)
 
@@ -40,7 +46,7 @@ func main() {
 	  To get all the tokens which will allow you to access the APIs, you need to call the Authorize method. As parameter you need to
 	  use the  CODE returned in the previous example.
 	*/
-	authorization, err := client.Authorize("TG-574c320ee4b0d077dbec5daf-214509008","https://www.example.com")
+	authorization, err := client.Authorize(CLIENT_CODE,"https://www.example.com")
 
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
@@ -60,7 +66,7 @@ func main() {
 	if err != nil {
 		log.Printf("Error %s\n", err.Error())
 	}
-
+	//Here you can see how refreshing authorization token is managed in case it has expired.
 	if resp.StatusCode == http.StatusBadRequest {
 		newToken, err := client.RefreshToken(*authorization)
 		if err != nil {
@@ -87,6 +93,7 @@ func main() {
 		log.Printf("Error %s\n", err.Error())
 	}
 
+	//Again, here you can see how refreshing authorization token is managed in case it has expired.
 	if resp.StatusCode == http.StatusBadRequest {
 		newToken, err := client.RefreshToken(*authorization)
 		if err != nil {

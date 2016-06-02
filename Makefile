@@ -2,7 +2,7 @@ utest:
 	cd mockapi ; npm install
 	node mockapi/app.js &
 	export GOPATH=export PWD=`pwd`
-	go test -v src/github.com/mercadolibre/sdk/*
+	go test -v src/github.com/mercadolibre/sdk/* 2>&1
 		
 #	kill `cat /tmp/mockapi.pid`
 
