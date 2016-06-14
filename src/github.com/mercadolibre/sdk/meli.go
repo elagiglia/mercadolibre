@@ -113,6 +113,22 @@ func NewClient(id int64, code string, secret string, redirectUrl string) (*Clien
     return client, nil
 }
 
+/*This client can be used to access those APIs which are public and do not need authorization
+*/
+func NewAnonymousClient() (*Client, error) {
+
+    client := &Client{apiUrl:API_URL, auth:ANONYMOUS}
+
+    return client, nil
+}
+
+func newTestAnonymousClient(apiUrl string) (*Client, error) {
+
+    client := &Client{apiUrl:apiUrl, auth:ANONYMOUS}
+
+    return client, nil
+}
+
 func newTestClient(id int64, code string, secret string, redirectUrl string, apiUrl string) (*Client, error){
 
     client := &Client{id:id, code:code, secret:secret, redirectUrl:redirectUrl, apiUrl:apiUrl}
@@ -126,10 +142,6 @@ func newTestClient(id int64, code string, secret string, redirectUrl string, api
     client.auth = *auth
 
     return client, nil
-}
-
-func (client *Client) SetApiURL(url string) {
-    client.apiUrl = url
 }
 
 func (client Client) authorize() (*Authorization, error) {
@@ -303,8 +315,7 @@ func (client *Client) getAuthorizedURL(resourcePath string) (*AuthorizationURL, 
         authMutex.Lock()
 
         if client.auth.isExpired() {
-            log.Printf("token has expired....refreshing..\n token received at:%d\n expiresin:%d \n now:%d\n",
-                client.auth.ReceivedAt, int64(client.auth.ExpiresIn),(time.Now().Unix() + 60))
+            log.Printf("token has expired....refreshing...")
             token, err := client.refreshToken()
 
             if err != nil {

@@ -25,7 +25,7 @@ import (
 )
 
 const (
-    CLIENT_CODE = "TG-5760158fe4b0d077ddd42d2f-214509008"
+    CLIENT_CODE = "TG-57605bd7e4b0d077dddc9c43-214509008"
     CLIENT_ID = 396051416295796
     CLIENT_SECRET = "qM66avGpv5rcQxNWF4sno5oH7Cjph0I7"
 )
@@ -101,6 +101,31 @@ func main() {
     resp.Body.Close()
 
     fmt.Printf("Example 4 \n\t Response of PUT /items : %s\n", userInfo)
+
+    resp, err = client.Put("/items/" + item.Id, &change)
+
+    if err != nil {
+        log.Printf("Error %s\n", err.Error())
+    }
+    userInfo, _= ioutil.ReadAll(resp.Body)
+    resp.Body.Close()
+
+    fmt.Printf("Example 4 \n\t Response of PUT /items : %s\n", userInfo)
+
+    /*
+     Example 5)
+     This example shows you how to DELETE an Item.
+    */
+
+   /* resp, err = client.Delete("/items/" + item.Id)
+
+    if err != nil {
+        log.Printf("Error %s\n", err.Error())
+    }
+    userInfo, _= ioutil.ReadAll(resp.Body)
+    resp.Body.Close()
+
+    fmt.Printf("Example 5 \n\t Response of DELETE /items : %s\n", userInfo)*/
 }
 
 type item struct {

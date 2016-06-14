@@ -29,7 +29,6 @@ const (
     API_TEST = "http://localhost:3000"
     CLIENT_ID = 123456
     CLIENT_SECRET = "client secret"
-    //CLIENT_CODE = "TG-574c8372e4b08aeaf07ca79e-214509008"
     CLIENT_CODE = "valid code with refresh token"
 )
 
@@ -50,7 +49,7 @@ func Test_URL_for_authentication_is_properly_return(t *testing.T) {
 
 func Test_GET_public_API_sites_works_properly ( t *testing.T){
 
-    client, err := newTestClient(CLIENT_ID, CLIENT_CODE, CLIENT_SECRET, "https://www.example.com", API_TEST)
+    client, err := newTestAnonymousClient(API_TEST)
 
     if err != nil {
         log.Printf("Error:%s\n", err)
