@@ -109,11 +109,6 @@ client := sdk.NewClient(123456,"client secret")
 client.Delete("/items/123", authorization)
 ```
 
-## Do I always need to include the ```access_token``` as a parameter?
-No. Actually most ```GET``` requests don't need an ```access_token``` and it is easier to avoid them and also it is better in terms of caching.
-But this decision is left to you. You should decide when it is necessary to include it or not.
-
-
 ## Community
 
 You can contact us if you have questions using the standard communication channels described in the [developer's site](http://developers-forum.mercadolibre.com/)
