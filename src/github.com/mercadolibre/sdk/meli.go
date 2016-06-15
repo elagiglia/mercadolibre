@@ -66,9 +66,12 @@ const (
 
 )
 
+type refreshToken func (*Client) error
+var refreshTok refreshToken
 
 func init() {
     log.SetFlags(log.LstdFlags | log.Lshortfile)
+    refreshTok = hookRefreshToken
 }
 
 var ANONYMOUS = Authorization{}
@@ -85,6 +88,11 @@ type Client struct {
 const (
     API_URL = "https://api.mercadolibre.com"
 )
+
+
+/*
+This function returns the URL to be used for user authentication and authorization
+ */
 func GetAuthURL(clientId int64, base_site, callback string) string {
 
     authURL := newAuthorizationURL(base_site  + "/authorization")
@@ -96,7 +104,7 @@ func GetAuthURL(clientId int64, base_site, callback string) string {
 }
 
 /*
-clientId and clientSecret are  generated when you create your application
+client id, code and secret are generated when creating your application
 */
 func NewClient(id int64, code string, secret string, redirectUrl string) (*Client, error) {
 
@@ -113,7 +121,8 @@ func NewClient(id int64, code string, secret string, redirectUrl string) (*Clien
     return client, nil
 }
 
-/*This client can be used to access those APIs which are public and do not need authorization
+/*
+This client may be used to access public API which does not need authorization
 */
 func NewAnonymousClient() (*Client, error) {
 
@@ -122,6 +131,9 @@ func NewAnonymousClient() (*Client, error) {
     return client, nil
 }
 
+/*
+Clients for testing purposes
+ */
 func newTestAnonymousClient(apiUrl string) (*Client, error) {
 
     client := &Client{apiUrl:apiUrl, auth:ANONYMOUS}
@@ -144,7 +156,11 @@ func newTestClient(id int64, code string, secret string, redirectUrl string, api
     return client, nil
 }
 
-func (client Client) authorize() (*Authorization, error) {
+/*
+This method returns an Authorization object which contains the needed tokens
+to interact with ML API
+ */
+func (client *Client) authorize() (*Authorization, error) {
 
     authURL := newAuthorizationURL(client.apiUrl + "/oauth/token")
     authURL.addGrantType(AUTHORIZATION_CODE)
@@ -179,7 +195,7 @@ func (client Client) authorize() (*Authorization, error) {
 
 
 //HTTP Methods
-func (client Client) Get(resourcePath string) (*http.Response, error) {
+func (client *Client) Get(resourcePath string) (*http.Response, error) {
 
     apiUrl, err := client.getAuthorizedURL(resourcePath)
 
@@ -198,7 +214,7 @@ func (client Client) Get(resourcePath string) (*http.Response, error) {
     return resp, err
 }
 
-func (client Client) Post(resourcePath string, body string) (*http.Response, error){
+func (client *Client) Post(resourcePath string, body string) (*http.Response, error){
 
     apiUrl, err := client.getAuthorizedURL(resourcePath)
 
@@ -217,7 +233,7 @@ func (client Client) Post(resourcePath string, body string) (*http.Response, err
     return resp, nil
 }
 
-func (client Client) Put(resourcePath string, body *string) (*http.Response, error){
+func (client *Client) Put(resourcePath string, body *string) (*http.Response, error){
 
     apiUrl, err := client.getAuthorizedURL(resourcePath)
 
@@ -244,7 +260,7 @@ func (client Client) Put(resourcePath string, body *string) (*http.Response, err
     return resp, nil
 }
 
-func (client Client) Delete(resourcePath string ) (*http.Response, error) {
+func (client *Client) Delete(resourcePath string ) (*http.Response, error) {
 
     apiUrl, err := client.getAuthorizedURL(resourcePath)
 
@@ -270,8 +286,8 @@ func (client Client) Delete(resourcePath string ) (*http.Response, error) {
     return resp, nil
 }
 
-
-func (client Client) refreshToken() (*Authorization, error) {
+//This method has side effects. Alters the token that is within the client.
+func hookRefreshToken(client *Client) error {
 
     authorizationURL := newAuthorizationURL(client.apiUrl + "/oauth/token")
     authorizationURL.addGrantType(REFRESH_TOKEN)
@@ -279,32 +295,34 @@ func (client Client) refreshToken() (*Authorization, error) {
     authorizationURL.addClientSecret(client.secret)
     authorizationURL.addRefreshToken(client.auth.RefreshToken)
 
-    log.Printf("auth url:%s\n", authorizationURL.string())
     resp, err := http.Post(authorizationURL.string(), "application/json", *(new(io.Reader)))
 
     if err != nil {
         log.Printf("Error while refreshing token: %s\n", err.Error())
-        return nil, err
+        return err
     }
 
     if resp.StatusCode != http.StatusOK {
-        return nil, errors.New("Refreshing token returned status code " + resp.Status)
+        return errors.New("Refreshing token returned status code " + resp.Status)
     }
 
     body, err := ioutil.ReadAll(resp.Body)
     resp.Body.Close()
 
-    newAuth := client.auth
-    if err := json.Unmarshal(body, &newAuth); err != nil {
+    if err := json.Unmarshal(body, &(client.auth)); err != nil {
         log.Printf("Error while receiving the authorization %s %s", err.Error(), body)
-        return nil, err
+        return err
     }
 
-    newAuth.ReceivedAt = time.Now().Unix()
+    client.auth.ReceivedAt = time.Now().Unix()
 
-    return &newAuth, nil
+    log.Printf("auth received at: %d expires in:%d\n", client.auth.ReceivedAt, client.auth.ExpiresIn)
+    return nil
 }
-
+/*
+This method returns the URL + Token to be used by each HTTP request.
+If Token needs to be refreshed, then this method will send a POST to ML API to refresh it.
+ */
 func (client *Client) getAuthorizedURL(resourcePath string) (*AuthorizationURL, error){
 
     finalUrl := newAuthorizationURL(client.apiUrl + resourcePath)
@@ -314,16 +332,15 @@ func (client *Client) getAuthorizedURL(resourcePath string) (*AuthorizationURL, 
 
         authMutex.Lock()
 
-        if client.auth.isExpired() {
-            log.Printf("token has expired....refreshing...")
-            token, err := client.refreshToken()
+       if client.auth.isExpired() {
+            log.Printf("token has expired....refreshing...\n")
+            err := refreshTok(client)
 
             if err != nil {
                 log.Printf("Error while refreshing token %s\n", err.Error())
                 return nil, err
             }
-            client.auth = *token
-        }
+       }
 
         authMutex.Unlock()
         finalUrl.addAccessToken(client.auth.AccessToken)
@@ -331,9 +348,6 @@ func (client *Client) getAuthorizedURL(resourcePath string) (*AuthorizationURL, 
 
     return finalUrl, err
 }
-/*
-If a refresh token is present in the authorization code exchange, then it may be used to obtain a new access tokens at any time.
-*/
 
 type Authorization struct {
     AccessToken  string  `json:"access_token"`
@@ -345,11 +359,13 @@ type Authorization struct {
 }
 
 func (auth Authorization) isExpired() bool {
+    log.Printf("received at:%d expires in: %d\n", auth.ReceivedAt, auth.ExpiresIn)
     return ((auth.ReceivedAt + int64(auth.ExpiresIn)) <= (time.Now().Unix() + 60))
 }
 
 /*
 This struct allows adding all the params needed to the URL to be sent
+to the ML API
 */
 type AuthorizationURL struct{
     url bytes.Buffer

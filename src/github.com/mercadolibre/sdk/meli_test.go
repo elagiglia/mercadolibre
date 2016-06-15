@@ -23,6 +23,7 @@ import (
     "net/http"
     "io/ioutil"
     "strings"
+    "sync"
 )
 
 const (
@@ -219,15 +220,43 @@ func Test_AuthorizationURL_adds_a_query_param_separator_when_needed(t *testing.T
         t.FailNow()
     }
 }
-/*
 
 func Test_only_one_token_refresh_call_is_done_when_several_threads_are_executed(t *testing.T){
 
-    client, _ := newTestClient(1234, "abcdedfadafas", CLIENT_SECRET, "https://www.example.com", API_TEST)
+    client, err := newTestClient(CLIENT_ID, CLIENT_CODE, CLIENT_SECRET, "https://www.example.com", API_TEST)
 
-    for i := 0; i< 10 ; i++ {
-
-        go client.Get("/users/me")
-
+    if err != nil {
+        log.Printf("Error during Client instantation %s\n", err)
+        t.FailNow()
     }
-}*/
+    client.auth.ExpiresIn = 0
+    refreshTok = hookForTesting
+
+    wg.Add(100)
+    for i := 0; i< 100 ; i++ {
+       go callHttpMethod(client)
+    }
+    wg.Wait()
+
+    if counter > 1 {
+        t.FailNow()
+    }
+}
+
+var counter = 0;
+var m = sync.Mutex{}
+
+func hookForTesting(client *Client) error {
+    hookRefreshToken(client)
+    m.Lock()
+    counter++
+    fmt.Printf("counter %d", counter)
+    m.Unlock()
+    return nil
+}
+var wg sync.WaitGroup
+
+func callHttpMethod(client *Client){
+    defer wg.Done()
+    client.Get("/users/me")
+}

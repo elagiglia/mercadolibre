@@ -25,7 +25,7 @@ import (
 )
 
 const (
-    CLIENT_CODE = "TG-57605bd7e4b0d077dddc9c43-214509008"
+    CLIENT_CODE = "TG-57616af7e4b0d077ddfe47e2-214509008"
     CLIENT_ID = 396051416295796
     CLIENT_SECRET = "qM66avGpv5rcQxNWF4sno5oH7Cjph0I7"
 )
@@ -79,7 +79,7 @@ func main() {
 
     itemAsJs, _ := ioutil.ReadAll(resp.Body)
     resp.Body.Close()
-    fmt.Printf("Example 3 \n\t Response of POST /items : %s\n", itemAsJs)
+    fmt.Printf("Example 3) \n\t Response of POST /items : %s\n", itemAsJs)
 
     item := new(item)
     err = json.Unmarshal(itemAsJs, item)
@@ -100,17 +100,7 @@ func main() {
     userInfo, _= ioutil.ReadAll(resp.Body)
     resp.Body.Close()
 
-    fmt.Printf("Example 4 \n\t Response of PUT /items : %s\n", userInfo)
-
-    resp, err = client.Put("/items/" + item.Id, &change)
-
-    if err != nil {
-        log.Printf("Error %s\n", err.Error())
-    }
-    userInfo, _= ioutil.ReadAll(resp.Body)
-    resp.Body.Close()
-
-    fmt.Printf("Example 4 \n\t Response of PUT /items : %s\n", userInfo)
+    fmt.Printf("Example 4) \n\t Response of PUT /items : %s\n", userInfo)
 
     /*
      Example 5)
