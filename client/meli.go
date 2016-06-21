@@ -27,7 +27,7 @@ The are two main structures:
 2) - This structure keeps the tokens and their expiration time and has to be passed by param each time a call has to be performed to any private API.
 */
 
-package sdk
+package client
 
 import (
     "net/url"

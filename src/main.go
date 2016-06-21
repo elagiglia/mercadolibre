@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-    "github.com/mercadolibre/sdk"
+    "github.com/elagiglia/mercadolibre/client"
     "fmt"
     "log"
     "encoding/json"
