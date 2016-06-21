@@ -229,7 +229,7 @@ func Test_only_one_token_refresh_call_is_done_when_several_threads_are_executed(
         log.Printf("Error during Client instantation %s\n", err)
         t.FailNow()
     }
-    client.auth.ExpiresIn = 0
+    client.Auth.ExpiresIn = 0
     refreshTok = hookForTesting
 
     wg.Add(100)

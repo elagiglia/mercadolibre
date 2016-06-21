@@ -78,12 +78,12 @@ var ANONYMOUS = Authorization{}
 var authMutex = &sync.Mutex{}
 
 type Client struct {
-    apiUrl string
-    id     int64
-    secret string
-    code   string
-    redirectUrl string
-    auth Authorization
+    ApiUrl      string
+    Id          int64
+    Secret      string
+    Code        string
+    RedirectUrl string
+    Auth        Authorization
 }
 const (
     API_URL = "https://api.mercadolibre.com"
@@ -108,7 +108,7 @@ client id, code and secret are generated when creating your application
 */
 func NewClient(id int64, code string, secret string, redirectUrl string) (*Client, error) {
 
-    client := &Client{id:id, code:code, secret:secret, redirectUrl:redirectUrl, apiUrl:API_URL}
+    client := &Client{Id:id, Code:code, Secret:secret, RedirectUrl:redirectUrl, ApiUrl:API_URL}
 
     auth, err := client.authorize()
 
@@ -116,7 +116,7 @@ func NewClient(id int64, code string, secret string, redirectUrl string) (*Clien
         return nil, err
     }
 
-    client.auth = *auth
+    client.Auth = *auth
 
     return client, nil
 }
@@ -126,7 +126,7 @@ This client may be used to access public API which does not need authorization
 */
 func NewAnonymousClient() (*Client, error) {
 
-    client := &Client{apiUrl:API_URL, auth:ANONYMOUS}
+    client := &Client{ApiUrl:API_URL, Auth:ANONYMOUS}
 
     return client, nil
 }
@@ -136,14 +136,14 @@ Clients for testing purposes
  */
 func newTestAnonymousClient(apiUrl string) (*Client, error) {
 
-    client := &Client{apiUrl:apiUrl, auth:ANONYMOUS}
+    client := &Client{ApiUrl:apiUrl, Auth:ANONYMOUS}
 
     return client, nil
 }
 
 func newTestClient(id int64, code string, secret string, redirectUrl string, apiUrl string) (*Client, error){
 
-    client := &Client{id:id, code:code, secret:secret, redirectUrl:redirectUrl, apiUrl:apiUrl}
+    client := &Client{Id:id, Code:code, Secret:secret, RedirectUrl:redirectUrl, ApiUrl:apiUrl}
 
     auth, err := client.authorize()
 
@@ -151,7 +151,7 @@ func newTestClient(id int64, code string, secret string, redirectUrl string, api
         return nil, err
     }
 
-    client.auth = *auth
+    client.Auth = *auth
 
     return client, nil
 }
@@ -162,12 +162,12 @@ to interact with ML API
  */
 func (client *Client) authorize() (*Authorization, error) {
 
-    authURL := newAuthorizationURL(client.apiUrl + "/oauth/token")
+    authURL := newAuthorizationURL(client.ApiUrl + "/oauth/token")
     authURL.addGrantType(AUTHORIZATION_CODE)
-    authURL.addClientId(client.id)
-    authURL.addClientSecret(client.secret)
-    authURL.addCode(client.code)
-    authURL.addRedirectUri(client.redirectUrl)
+    authURL.addClientId(client.Id)
+    authURL.addClientSecret(client.Secret)
+    authURL.addCode(client.Code)
+    authURL.addRedirectUri(client.RedirectUrl)
 
     resp, err := http.Post(authURL.string(), "application/json", *(new(io.Reader)))
 
@@ -289,11 +289,11 @@ func (client *Client) Delete(resourcePath string ) (*http.Response, error) {
 //This method has side effects. Alters the token that is within the client.
 func hookRefreshToken(client *Client) error {
 
-    authorizationURL := newAuthorizationURL(client.apiUrl + "/oauth/token")
+    authorizationURL := newAuthorizationURL(client.ApiUrl + "/oauth/token")
     authorizationURL.addGrantType(REFRESH_TOKEN)
-    authorizationURL.addClientId(client.id)
-    authorizationURL.addClientSecret(client.secret)
-    authorizationURL.addRefreshToken(client.auth.RefreshToken)
+    authorizationURL.addClientId(client.Id)
+    authorizationURL.addClientSecret(client.Secret)
+    authorizationURL.addRefreshToken(client.Auth.RefreshToken)
 
     resp, err := http.Post(authorizationURL.string(), "application/json", *(new(io.Reader)))
 
@@ -309,14 +309,14 @@ func hookRefreshToken(client *Client) error {
     body, err := ioutil.ReadAll(resp.Body)
     resp.Body.Close()
 
-    if err := json.Unmarshal(body, &(client.auth)); err != nil {
+    if err := json.Unmarshal(body, &(client.Auth)); err != nil {
         log.Printf("Error while receiving the authorization %s %s", err.Error(), body)
         return err
     }
 
-    client.auth.ReceivedAt = time.Now().Unix()
+    client.Auth.ReceivedAt = time.Now().Unix()
 
-    log.Printf("auth received at: %d expires in:%d\n", client.auth.ReceivedAt, client.auth.ExpiresIn)
+    log.Printf("auth received at: %d expires in:%d\n", client.Auth.ReceivedAt, client.Auth.ExpiresIn)
     return nil
 }
 /*
@@ -325,14 +325,14 @@ If Token needs to be refreshed, then this method will send a POST to ML API to r
  */
 func (client *Client) getAuthorizedURL(resourcePath string) (*AuthorizationURL, error){
 
-    finalUrl := newAuthorizationURL(client.apiUrl + resourcePath)
+    finalUrl := newAuthorizationURL(client.ApiUrl + resourcePath)
     var err error
 
-    if client.auth != ANONYMOUS {
+    if client.Auth != ANONYMOUS {
 
         authMutex.Lock()
 
-       if client.auth.isExpired() {
+       if client.Auth.isExpired() {
             log.Printf("token has expired....refreshing...\n")
             err := refreshTok(client)
 
@@ -343,7 +343,7 @@ func (client *Client) getAuthorizedURL(resourcePath string) (*AuthorizationURL, 
        }
 
         authMutex.Unlock()
-        finalUrl.addAccessToken(client.auth.AccessToken)
+        finalUrl.addAccessToken(client.Auth.AccessToken)
     }
 
     return finalUrl, err
@@ -372,42 +372,42 @@ type AuthorizationURL struct{
 }
 
 func (u *AuthorizationURL) addGrantType(value string) {
-    u.add("grant_type=" + value)
+    u.Add("grant_type=" + value)
 }
 
 func (u *AuthorizationURL) addClientId(value int64) {
-    u.add("client_id=" + strconv.FormatInt(value, 10))
+    u.Add("client_id=" + strconv.FormatInt(value, 10))
 }
 
 func (u *AuthorizationURL) addClientSecret(value string) {
-    u.add("client_secret=" + url.QueryEscape(value))
+    u.Add("client_secret=" + url.QueryEscape(value))
 }
 
 func (u *AuthorizationURL) addCode(value string) {
-    u.add("code=" + url.QueryEscape(value))
+    u.Add("code=" + url.QueryEscape(value))
 }
 
 func (u *AuthorizationURL) addRedirectUri(uri string) {
-    u.add("redirect_uri=" + url.QueryEscape(uri))
+    u.Add("redirect_uri=" + url.QueryEscape(uri))
 }
 
 func (u *AuthorizationURL) addRefreshToken(t string) {
-    u.add("refresh_token=" + url.QueryEscape(t))
+    u.Add("refresh_token=" + url.QueryEscape(t))
 }
 
 func (u *AuthorizationURL) addResponseType(value string) {
-    u.add("response_type=" + url.QueryEscape(value))
+    u.Add("response_type=" + url.QueryEscape(value))
 }
 
 func (u *AuthorizationURL) addAccessToken(t string){
-    u.add("access_token=" + url.QueryEscape(t))
+    u.Add("access_token=" + url.QueryEscape(t))
 }
 
 func (u *AuthorizationURL) string() string {
     return u.url.String()
 }
 
-func (u *AuthorizationURL) add(value string) {
+func (u *AuthorizationURL) Add(value string) {
 
     if !strings.Contains(u.url.String(), "?"){
         u.url.WriteString("?" + value)
